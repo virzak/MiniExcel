@@ -793,6 +793,38 @@ exporter.Export("Book1.xlsx", rows);
 The value given with a formula is written as its cached result, which Excel shows until it recalculates. Pass `null` to leave the result for Excel to calculate.
 A cell with only a style keeps the number format it would otherwise have had.
 
+#### 15. Chart sheets
+
+A chart sheet holds only a chart. Add an `OpenXmlChartSheet` to the sheets of a workbook, next to the sheets its series read from:
+
+```csharp
+var chart = new OpenXmlChart { Title = "Speed", LegendPosition = OpenXmlChartLegendPosition.Bottom };
+chart.XAxis.Title = "Distance (m)";
+chart.YAxis.Title = "Speed (m/s)";
+chart.Plots.Add(new OpenXmlChartPlot(OpenXmlChartType.ScatterLines)
+{
+    Series =
+    {
+        new OpenXmlChartSeries(OpenXmlChartData.FromRange("Readings", "B2:B500"), OpenXmlChartData.FromRange("Readings", "A2:A500"))
+        {
+            Name = "Speed",
+            Color = Color.Black
+        }
+    }
+});
+
+var sheets = new Dictionary<string, object>
+{
+    ["Readings"] = readings,
+    ["Speed Graph"] = new OpenXmlChartSheet(chart)
+};
+
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
+exporter.Export("speed.xlsx", sheets);
+```
+
+Series read from a cell range or from literal values (`OpenXmlChartData.FromValues`). A chart can combine several plots, such as stacked columns on the secondary axes behind a line on the primary ones, and each axis can set its title, bounds, number format, label rotation, tick marks and gridlines. Colors with an alpha channel are drawn transparent, and `ShowInLegend = false` leaves a series out of the legend.
+
 
 ### Fill Data To Excel Template <a name="docs-template" />
 
